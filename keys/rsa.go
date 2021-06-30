@@ -29,3 +29,16 @@ func SaveRootRsaKey(key rsa.PrivateKey, conf config.Config) error {
 	}
 	return nil
 }
+
+func GetRootRsaKey(conf config.Config) (*rsa.PrivateKey, error) {
+	bytes, err := ioutil.ReadFile(paths.GetRootRsaKeyPath(conf))
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode(bytes)
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
+}

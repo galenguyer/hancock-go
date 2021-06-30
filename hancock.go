@@ -56,17 +56,16 @@ func InitConfig() error {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		return newConfig()
 	} else {
-		fmt.Printf("Config file %s exists already - do you want to overwrite it? [yN]: ", configPath)
+		fmt.Printf("config file %s exists already - do you want to overwrite it? [yN]: ", configPath)
 		var prompt string
 		_, err = fmt.Scanln(&prompt)
 		if err != nil {
 			return err
 		}
 		if strings.ToLower(prompt) == "y" {
-			newConfig()
+			return newConfig()
 		} else {
-			fmt.Println("not overwriting config and exiting")
-			os.Exit(0)
+			fmt.Println("not overwriting config")
 		}
 	}
 	return nil
@@ -118,7 +117,7 @@ func readConfig() (*config.Config, error) {
 		return nil, err
 	}
 	var conf config.Config
-	err = yaml.Unmarshal(yamlFile, conf)
+	err = yaml.Unmarshal(yamlFile, &conf)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +125,49 @@ func readConfig() (*config.Config, error) {
 }
 
 func InitCA() error {
+	conf, err := readConfig()
+	if err != nil {
+		return err
+	}
+
+	if _, err = os.Stat(paths.GetRootRsaKeyPath(*conf)); os.IsNotExist(err) {
+		return newRootRsaKey()
+	} else {
+		fmt.Printf("root rsa key %s exists already - do you want to overwrite it? [yN]: ", paths.GetRootRsaKeyPath(*conf))
+		var prompt string
+		_, err = fmt.Scanln(&prompt)
+		if err != nil {
+			return err
+		}
+		if strings.ToLower(prompt) == "y" {
+			if err = newRootRsaKey(); err != nil {
+				return err
+			}
+		} else {
+			fmt.Println("not overwriting root rsa key")
+		}
+	}
+
+	if _, err = os.Stat(paths.GetCACertPath(*conf)); os.IsNotExist(err) {
+		return newRootCACert()
+	} else {
+		fmt.Printf("root ca certificate %s exists already - do you want to overwrite it? [yN]: ", paths.GetCACertPath(*conf))
+		var prompt string
+		_, err = fmt.Scanln(&prompt)
+		if err != nil {
+			return err
+		}
+		if strings.ToLower(prompt) == "y" {
+			return newRootCACert()
+		} else {
+			fmt.Println("not overwriting root ca certificate")
+		}
+	}
+	return nil
+}
+
+func newRootRsaKey() error {
+	fmt.Println("generating new root rsa key")
 	conf, err := readConfig()
 	if err != nil {
 		return err
@@ -139,11 +181,19 @@ func InitCA() error {
 	if err != nil {
 		return err
 	}
-	err = keys.SaveRootRsaKey(*key, *conf)
+	return keys.SaveRootRsaKey(*key, *conf)
+}
+
+func newRootCACert() error {
+	fmt.Println("generating new ca certificate")
+	conf, err := readConfig()
 	if err != nil {
 		return err
 	}
-
+	key, err := keys.GetRootRsaKey(*conf)
+	if err != nil {
+		return err
+	}
 	caCertBytes, err := certs.GenerateRootCACert(*key, *conf)
 	if err != nil {
 		return err

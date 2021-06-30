@@ -55,7 +55,6 @@ func SaveRootCACert(certBytes []byte, conf config.Config) error {
 		return err
 	}
 	return nil
-
 }
 
 func getSerial() (*big.Int, error) {
