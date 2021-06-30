@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/galenguyer/hancock/certs"
 	"github.com/galenguyer/hancock/config"
@@ -58,19 +57,7 @@ func InitConfig() error {
 		// create a new config
 		return newConfig()
 	} else {
-		// else prompt for overwrite
-		fmt.Printf("config file %s exists already - do you want to overwrite it? [yN]: ", configPath)
-		var prompt string
-		if _, err = fmt.Scanln(&prompt); err != nil {
-			return err
-		}
-		// if we got y create a new config
-		if strings.ToLower(prompt) == "y" {
-			return newConfig()
-		} else {
-			// else state we won't overwrite and exit
-			fmt.Println("not overwriting config")
-		}
+		fmt.Println("not overwriting config")
 	}
 	return nil
 }
@@ -151,19 +138,7 @@ func InitCA() error {
 		// generate new root rsa key
 		return newRootRsaKey()
 	} else {
-		// else prompt for overwrite
-		fmt.Printf("root rsa key %s exists already - do you want to overwrite it? [yN]: ", paths.GetRootRsaKeyPath(*conf))
-		var prompt string
-		if _, err = fmt.Scanln(&prompt); err != nil {
-			return err
-		}
-		if strings.ToLower(prompt) == "y" {
-			// if we got y create the new key
-			return newRootRsaKey()
-		} else {
-			// else state we won't overwrite it and exit
-			fmt.Println("not overwriting root rsa key")
-		}
+		fmt.Println("not overwriting root rsa key")
 	}
 
 	// if the root ca certificate does not exist
@@ -171,19 +146,7 @@ func InitCA() error {
 		// generate new root ca certificate
 		return newRootCACert()
 	} else {
-		// else prompt for overwrite
-		fmt.Printf("root ca certificate %s exists already - do you want to overwrite it? [yN]: ", paths.GetCACertPath(*conf))
-		var prompt string
-		if _, err = fmt.Scanln(&prompt); err != nil {
-			return err
-		}
-		if strings.ToLower(prompt) == "y" {
-			// if we got y create the new certificate
-			return newRootCACert()
-		} else {
-			// else state we won't overwrite it and continue
-			fmt.Println("not overwriting root ca certificate")
-		}
+		fmt.Println("not overwriting root ca certificate")
 	}
 	return nil
 }
