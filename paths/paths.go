@@ -8,7 +8,7 @@ import (
 )
 
 func GetRootRsaKeyPath(conf config.Config) string {
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/ca.pem"
+	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/private/ca.pem"
 }
 
 func GetCACertPath(conf config.Config) string {
@@ -17,6 +17,10 @@ func GetCACertPath(conf config.Config) string {
 
 func CreateDirectories(conf config.Config) error {
 	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/"), 0755)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/private", 0755)
 	if err != nil {
 		return err
 	}
