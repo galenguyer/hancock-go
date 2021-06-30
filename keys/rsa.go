@@ -13,17 +13,31 @@ import (
 
 // TODO: password encryption of root rsa key
 func GenerateRootRsaKey(conf config.Config) (*rsa.PrivateKey, error) {
-	rootRsaKey, err := rsa.GenerateKey(rand.Reader, conf.Key.Bits)
-	if err != nil {
-		return nil, err
-	}
-	return rootRsaKey, nil
+	return rsa.GenerateKey(rand.Reader, conf.Key.Bits)
+}
+
+func GenerateRsaKey(bits int) (*rsa.PrivateKey, error) {
+	return rsa.GenerateKey(rand.Reader, bits)
 }
 
 func SaveRootRsaKey(key rsa.PrivateKey, conf config.Config) error {
 	keyPem := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(&key)}
 	bytes := pem.EncodeToMemory(keyPem)
 	err := ioutil.WriteFile(paths.GetRootRsaKeyPath(conf), bytes, 0600)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SaveRsaKey(key rsa.PrivateKey, name string, conf config.Config) error {
+	keyPem := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(&key)}
+	bytes := pem.EncodeToMemory(keyPem)
+	path, err := paths.GetRsaKeyPath(name, conf)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(path, bytes, 0600)
 	if err != nil {
 		return err
 	}

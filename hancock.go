@@ -42,6 +42,14 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:    "new",
+				Aliases: []string{"create"},
+				Usage:   "sign a new key for a host",
+				Action: func(c *cli.Context) error {
+					return NewCert()
+				},
+			},
 		},
 	}
 
@@ -102,7 +110,6 @@ func newConfig() error {
 	}
 	fmt.Printf("created new config file at %s\n", configPath)
 	return nil
-
 }
 
 func readConfig() (*config.Config, error) {
@@ -186,4 +193,25 @@ func newRootCACert() error {
 	}
 	// write certificate to disk
 	return certs.SaveRootCACert(caCertBytes, *conf)
+}
+
+func NewCert() error {
+	name := "localhost"
+	// load the config from disk
+	conf, err := readConfig()
+	if err != nil {
+		return err
+	}
+
+	// generate and write a new rsa key
+	key, err := keys.GenerateRsaKey(2048)
+	if err != nil {
+		return err
+	}
+	err = keys.SaveRsaKey(*key, name, *conf)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
