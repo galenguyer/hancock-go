@@ -22,12 +22,12 @@ func GenerateRootCACert(rootKey rsa.PrivateKey, conf config.Config) ([]byte, err
 	notBefore := time.Now()
 	notAfter := notBefore.Add(time.Duration(conf.Key.Lifetime) * 24 * time.Hour).Add(-1 * time.Second)
 	subject := pkix.Name{
-		CommonName:         "Root CA",
-		Country:            []string{"US"},
-		Locality:           []string{"Redmond"},
-		Province:           []string{"Washington"},
-		Organization:       []string{"Contoso"},
-		OrganizationalUnit: []string{"Contoso"},
+		CommonName:         conf.Key.CommonName,
+		Country:            []string{conf.Key.Country},
+		Locality:           []string{conf.Key.Locality},
+		Province:           []string{conf.Key.Province},
+		Organization:       []string{conf.Key.Organization},
+		OrganizationalUnit: []string{conf.Key.OrganizationalUnit},
 	}
 	template := &x509.Certificate{
 		Subject:               subject,
