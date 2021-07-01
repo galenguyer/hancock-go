@@ -11,30 +11,30 @@ func GetRootRsaKeyPath(conf config.Config) string {
 	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/private/ca.pem"
 }
 func GetRsaKeyPath(name string, conf config.Config) (string, error) {
-	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+strings.TrimSuffix(name, ".pem"), 0755)
+	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+name, 0755)
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + strings.TrimSuffix(name, ".pem") + "/" + strings.TrimSuffix(name, ".pem") + ".pem", nil
+	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + name + "/" + name + ".pem", nil
 }
 
 func GetCACertPath(conf config.Config) string {
 	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/ca.crt"
 }
 func GetCertPath(name string, conf config.Config) (string, error) {
-	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+strings.TrimSuffix(name, ".crt"), 0755)
+	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+name, 0755)
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + strings.TrimSuffix(name, ".crt") + "/" + strings.TrimSuffix(name, ".crt") + ".crt", nil
+	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + name + "/" + name + ".crt", nil
 }
 
 func GetCsrPath(name string, conf config.Config) (string, error) {
-	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+strings.TrimSuffix(name, ".csr"), 0755)
+	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+name, 0755)
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + strings.TrimSuffix(name, ".csr") + "/" + strings.TrimSuffix(name, ".csr") + ".csr", nil
+	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + name + "/" + name + ".csr", nil
 }
 
 func CreateDirectories(conf config.Config) error {
