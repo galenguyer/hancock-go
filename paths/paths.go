@@ -3,48 +3,46 @@ package paths
 import (
 	"os"
 	"strings"
-
-	"github.com/galenguyer/hancock/config"
 )
 
-func GetRootRsaKeyPath(conf config.Config) string {
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/private/ca.pem"
+func GetRootRsaKeyPath(baseDir string) string {
+	return strings.TrimSuffix(baseDir, "/") + "/private/ca.pem"
 }
-func GetRsaKeyPath(name string, conf config.Config) (string, error) {
-	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+name, 0755)
+func GetRsaKeyPath(name string, baseDir string) (string, error) {
+	err := os.MkdirAll(strings.TrimSuffix(baseDir, "/")+"/certificates/"+name, 0755)
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + name + "/" + name + ".pem", nil
+	return strings.TrimSuffix(baseDir, "/") + "/certificates/" + name + "/" + name + ".pem", nil
 }
 
-func GetCACertPath(conf config.Config) string {
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/ca.crt"
+func GetCACertPath(baseDir string) string {
+	return strings.TrimSuffix(baseDir, "/") + "/certificates/ca.crt"
 }
-func GetCertPath(name string, conf config.Config) (string, error) {
-	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+name, 0755)
+func GetCertPath(name string, baseDir string) (string, error) {
+	err := os.MkdirAll(strings.TrimSuffix(baseDir, "/")+"/certificates/"+name, 0755)
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + name + "/" + name + ".crt", nil
+	return strings.TrimSuffix(baseDir, "/") + "/certificates/" + name + "/" + name + ".crt", nil
 }
 
-func GetCsrPath(name string, conf config.Config) (string, error) {
-	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+name, 0755)
+func GetCsrPath(name string, baseDir string) (string, error) {
+	err := os.MkdirAll(strings.TrimSuffix(baseDir, "/")+"/certificates/"+name, 0755)
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + name + "/" + name + ".csr", nil
+	return strings.TrimSuffix(baseDir, "/") + "/certificates/" + name + "/" + name + ".csr", nil
 }
 
-func CreateDirectories(conf config.Config) error {
-	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/"), 0755)
+func CreateDirectories(baseDir string) error {
+	err := os.MkdirAll(strings.TrimSuffix(baseDir, "/"), 0755)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/private", 0755)
+	err = os.MkdirAll(strings.TrimSuffix(baseDir, "/")+"/private", 0755)
 	if err != nil {
 		return err
 	}
-	return os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates", 0755)
+	return os.MkdirAll(strings.TrimSuffix(baseDir, "/")+"/certificates", 0755)
 }
