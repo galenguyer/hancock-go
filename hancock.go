@@ -143,7 +143,9 @@ func InitCA() error {
 	// if root rsa key does not exist
 	if _, err = os.Stat(paths.GetRootRsaKeyPath(*conf)); os.IsNotExist(err) {
 		// generate new root rsa key
-		return newRootRsaKey()
+		if err = newRootRsaKey(); err != nil {
+			return err
+		}
 	} else {
 		fmt.Println("not overwriting root rsa key")
 	}
