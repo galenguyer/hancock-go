@@ -41,20 +41,21 @@ func GenerateRootCACert(rootKey rsa.PrivateKey, conf config.Config) ([]byte, err
 		BasicConstraintsValid: true,
 		IsCA:                  true,
 	}
-	certBytes, err := x509.CreateCertificate(rand.Reader, template, template, &rootKey.PublicKey, &rootKey)
-	if err != nil {
-		return nil, err
-	}
-	return certBytes, nil
+	return x509.CreateCertificate(rand.Reader, template, template, &rootKey.PublicKey, &rootKey)
 }
 
 func SaveRootCACert(certBytes []byte, conf config.Config) error {
 	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
-	err := ioutil.WriteFile(paths.GetCACertPath(conf), pemBytes, 0644)
+	return ioutil.WriteFile(paths.GetCACertPath(conf), pemBytes, 0644)
+}
+
+func GetRootCACert(conf config.Config) (*x509.Certificate, error) {
+	bytes, err := ioutil.ReadFile(paths.GetCACertPath(conf))
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	block, _ := pem.Decode(bytes)
+	return x509.ParseCertificate(block.Bytes)
 }
 
 func getSerial() (*big.Int, error) {

@@ -21,6 +21,21 @@ func GetRsaKeyPath(name string, conf config.Config) (string, error) {
 func GetCACertPath(conf config.Config) string {
 	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/ca.crt"
 }
+func GetCertPath(name string, conf config.Config) (string, error) {
+	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+strings.TrimSuffix(name, ".crt"), 0755)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + strings.TrimSuffix(name, ".crt") + "/" + strings.TrimSuffix(name, ".crt") + ".crt", nil
+}
+
+func GetCsrPath(name string, conf config.Config) (string, error) {
+	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/")+"/certificates/"+strings.TrimSuffix(name, ".csr"), 0755)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSuffix(conf.File.BaseDir, "/") + "/certificates/" + strings.TrimSuffix(name, ".csr") + "/" + strings.TrimSuffix(name, ".csr") + ".csr", nil
+}
 
 func CreateDirectories(conf config.Config) error {
 	err := os.MkdirAll(strings.TrimSuffix(conf.File.BaseDir, "/"), 0755)

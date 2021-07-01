@@ -215,5 +215,29 @@ func NewCert() error {
 		return err
 	}
 
+	// generate and write a new csr
+	csr, err := certs.GenerateCsr(name, *key, *conf)
+	if err != nil {
+		return err
+	}
+	err = certs.SaveCsr(name, csr, *conf)
+	if err != nil {
+		return err
+	}
+
+	// sign and save the certificate
+	rootKey, err := keys.GetRootRsaKey(*conf)
+	if err != nil {
+		return err
+	}
+	cert, err := certs.GenerateCert(csr, *rootKey, *conf)
+	if err != nil {
+		return err
+	}
+	err = certs.SaveCert(cert, name, *conf)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

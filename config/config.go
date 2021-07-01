@@ -1,5 +1,6 @@
 package config
 
+// TODO: use flags and get rid of this entirely
 type Config struct {
 	Key struct {
 		Bits               int    `yaml:"bits"`
