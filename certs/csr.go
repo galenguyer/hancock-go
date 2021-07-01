@@ -11,19 +11,19 @@ import (
 	"github.com/galenguyer/hancock/paths"
 )
 
-func GenerateCsr(name string, key rsa.PrivateKey, country, locality, province, organization, organizationalUnit string) ([]byte, error) {
-	_, err := getSerial()
+func GenerateCsr(name, baseDir string, key rsa.PrivateKey) ([]byte, error) {
+	rootCACert, err := GetRootCACert(baseDir)
 	if err != nil {
 		return nil, err
 	}
 
 	subject := pkix.Name{
 		CommonName:         name,
-		Country:            []string{country},
-		Locality:           []string{locality},
-		Province:           []string{province},
-		Organization:       []string{organization},
-		OrganizationalUnit: []string{organizationalUnit},
+		Country:            rootCACert.Issuer.Country,
+		Locality:           rootCACert.Issuer.Locality,
+		Province:           rootCACert.Issuer.Province,
+		Organization:       rootCACert.Issuer.Organization,
+		OrganizationalUnit: rootCACert.Issuer.OrganizationalUnit,
 	}
 	template := x509.CertificateRequest{
 		Subject:            subject,

@@ -11,7 +11,7 @@ import (
 	"github.com/galenguyer/hancock/paths"
 )
 
-func GenerateCert(csrBytes []byte, rootKey rsa.PrivateKey, baseDir string) ([]byte, error) {
+func GenerateCert(csrBytes []byte, lifetime int, rootKey rsa.PrivateKey, baseDir string) ([]byte, error) {
 	rootCACert, err := GetRootCACert(baseDir)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func GenerateCert(csrBytes []byte, rootKey rsa.PrivateKey, baseDir string) ([]by
 		return nil, err
 	}
 	notBefore := time.Now()
-	notAfter := notBefore.Add(90 * 24 * time.Hour).Add(-1 * time.Second)
+	notAfter := notBefore.Add(time.Duration(lifetime) * 24 * time.Hour).Add(-1 * time.Second)
 
 	template := &x509.Certificate{
 		Subject:               csr.Subject,

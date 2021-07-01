@@ -86,54 +86,24 @@ func main() {
 					&cli.IntFlag{
 						Name:    "lifetime",
 						Aliases: []string{"t"},
-						Value:   10 * 365,
+						Value:   90,
 					},
 					&cli.IntFlag{
 						Name:    "bits",
 						Aliases: []string{"b"},
-						Value:   4096,
+						Value:   2048,
 					},
 					&cli.StringFlag{
-						Name:    "commonname",
-						Aliases: []string{"cn"},
-						Value:   "Root CA",
-					},
-					&cli.StringFlag{
-						Name:    "country",
-						Aliases: []string{"c"},
-						Value:   "US",
-					},
-					&cli.StringFlag{
-						Name:    "state",
-						Aliases: []string{"st"},
-						Value:   "Washington",
-					},
-					&cli.StringFlag{
-						Name:    "locality",
-						Aliases: []string{"l"},
-						Value:   "Redmond",
-					},
-					&cli.StringFlag{
-						Name:    "organization",
-						Aliases: []string{"o"},
-						Value:   "Contoso",
-					},
-					&cli.StringFlag{
-						Name:    "organizationalunit",
-						Aliases: []string{"ou"},
-						Value:   "Contoso",
+						Name:    "name",
+						Aliases: []string{"n"},
+						Value:   "localhost",
 					},
 				},
 				Action: func(c *cli.Context) error {
 					return NewCert(
 						c.Int("bits"),
 						c.Int("lifetime"),
-						c.String("commonname"),
-						c.String("country"),
-						c.String("province"),
-						c.String("locality"),
-						c.String("organization"),
-						c.String("organizationalunit"),
+						c.String("name"),
 						c.String("basedir"),
 					)
 				},
@@ -207,7 +177,7 @@ func newRootCACert(lifetime int, commonname, country, province, locality, organi
 	return certs.SaveRootCACert(caCertBytes, baseDir)
 }
 
-func NewCert(bits, lifetime int, name, country, province, locality, organization, organizationalUnit, baseDir string) error {
+func NewCert(bits, lifetime int, name, baseDir string) error {
 	// generate and write a new rsa key
 	key, err := keys.GenerateRsaKey(bits)
 	if err != nil {
@@ -219,7 +189,7 @@ func NewCert(bits, lifetime int, name, country, province, locality, organization
 	}
 
 	// generate and write a new csr
-	csr, err := certs.GenerateCsr(name, *key, country, province, locality, organization, organizationalUnit)
+	csr, err := certs.GenerateCsr(name, baseDir, *key)
 	if err != nil {
 		return err
 	}
@@ -233,7 +203,7 @@ func NewCert(bits, lifetime int, name, country, province, locality, organization
 	if err != nil {
 		return err
 	}
-	cert, err := certs.GenerateCert(csr, *rootKey, baseDir)
+	cert, err := certs.GenerateCert(csr, lifetime, *rootKey, baseDir)
 	if err != nil {
 		return err
 	}
