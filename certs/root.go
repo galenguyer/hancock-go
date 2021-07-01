@@ -10,24 +10,23 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/galenguyer/hancock/config"
 	"github.com/galenguyer/hancock/paths"
 )
 
-func GenerateRootCACert(rootKey rsa.PrivateKey, conf config.Config) ([]byte, error) {
+func GenerateRootCACert(rootKey rsa.PrivateKey, lifetime int, commonName, country, locality, province, organization, organizationalUnit string) ([]byte, error) {
 	serial, err := getSerial()
 	if err != nil {
 		return nil, err
 	}
 	notBefore := time.Now()
-	notAfter := notBefore.Add(time.Duration(conf.Key.Lifetime) * 24 * time.Hour).Add(-1 * time.Second)
+	notAfter := notBefore.Add(time.Duration(lifetime) * 24 * time.Hour).Add(-1 * time.Second)
 	subject := pkix.Name{
-		CommonName:         conf.Key.CommonName,
-		Country:            []string{conf.Key.Country},
-		Locality:           []string{conf.Key.Locality},
-		Province:           []string{conf.Key.Province},
-		Organization:       []string{conf.Key.Organization},
-		OrganizationalUnit: []string{conf.Key.OrganizationalUnit},
+		CommonName:         commonName,
+		Country:            []string{country},
+		Locality:           []string{locality},
+		Province:           []string{province},
+		Organization:       []string{organization},
+		OrganizationalUnit: []string{organizationalUnit},
 	}
 	template := &x509.Certificate{
 		Subject:               subject,
@@ -44,13 +43,13 @@ func GenerateRootCACert(rootKey rsa.PrivateKey, conf config.Config) ([]byte, err
 	return x509.CreateCertificate(rand.Reader, template, template, &rootKey.PublicKey, &rootKey)
 }
 
-func SaveRootCACert(certBytes []byte, conf config.Config) error {
+func SaveRootCACert(certBytes []byte, baseDir string) error {
 	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
-	return ioutil.WriteFile(paths.GetCACertPath(conf), pemBytes, 0644)
+	return ioutil.WriteFile(paths.GetCACertPath(baseDir), pemBytes, 0644)
 }
 
-func GetRootCACert(conf config.Config) (*x509.Certificate, error) {
-	bytes, err := ioutil.ReadFile(paths.GetCACertPath(conf))
+func GetRootCACert(baseDir string) (*x509.Certificate, error) {
+	bytes, err := ioutil.ReadFile(paths.GetCACertPath(baseDir))
 	if err != nil {
 		return nil, err
 	}

@@ -2,16 +2,13 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
 	"github.com/galenguyer/hancock/certs"
-	"github.com/galenguyer/hancock/config"
 	"github.com/galenguyer/hancock/keys"
 	"github.com/galenguyer/hancock/paths"
 	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -24,31 +21,104 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "init",
-				Usage: "initialize the app",
-				Subcommands: []*cli.Command{
-					{
-						Name:  "config",
-						Usage: "create a new configuration file with all defaults",
-						Action: func(c *cli.Context) error {
-							return InitConfig()
-						},
+				Usage: "initialize the certificate authority",
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:  "lifetime",
+						Value: 10 * 365,
 					},
-					{
-						Name:  "ca",
-						Usage: "initialize a new ca from the configuration file",
-						Action: func(c *cli.Context) error {
-							return InitCA()
-						},
+					&cli.StringFlag{
+						Name:  "commonname",
+						Value: "Root CA",
 					},
+					&cli.StringFlag{
+						Name:  "country",
+						Value: "US",
+					},
+					&cli.StringFlag{
+						Name:  "province",
+						Value: "Washington",
+					},
+					&cli.StringFlag{
+						Name:  "locality",
+						Value: "Redmond",
+					},
+					&cli.StringFlag{
+						Name:  "organization",
+						Value: "Contoso",
+					},
+					&cli.StringFlag{
+						Name:  "organizationalunit",
+						Value: "Contoso",
+					},
+				},
+				Action: func(c *cli.Context) error {
+					return InitCA(
+						c.Int("bits"),
+						c.Int("lifetime"),
+						c.String("commonname"),
+						c.String("country"),
+						c.String("province"),
+						c.String("locality"),
+						c.String("organization"),
+						c.String("organizationalunit"),
+						c.String("basedir"),
+					)
 				},
 			},
 			{
 				Name:    "new",
 				Aliases: []string{"create"},
 				Usage:   "sign a new key for a host",
-				Action: func(c *cli.Context) error {
-					return NewCert()
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:  "lifetime",
+						Value: 90,
+					},
+					&cli.StringFlag{
+						Name:  "commonname",
+						Value: "Root CA",
+					},
+					&cli.StringFlag{
+						Name:  "country",
+						Value: "US",
+					},
+					&cli.StringFlag{
+						Name:  "province",
+						Value: "Washington",
+					},
+					&cli.StringFlag{
+						Name:  "locality",
+						Value: "Redmond",
+					},
+					&cli.StringFlag{
+						Name:  "organization",
+						Value: "Contoso",
+					},
+					&cli.StringFlag{
+						Name:  "organizationalunit",
+						Value: "Contoso",
+					},
 				},
+				Action: func(c *cli.Context) error {
+					return NewCert(
+						c.Int("bits"),
+						c.Int("lifetime"),
+						c.String("commonname"),
+						c.String("country"),
+						c.String("province"),
+						c.String("locality"),
+						c.String("organization"),
+						c.String("organizationalunit"),
+						c.String("basedir"),
+					)
+				},
+			},
+		},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "basedir",
+				Value: "./.ca",
 			},
 		},
 	}
@@ -59,91 +129,17 @@ func main() {
 	}
 }
 
-func InitConfig() error {
-	// if the config path does not exist
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		// create a new config
-		return newConfig()
-	} else {
-		fmt.Println("not overwriting config")
-	}
-	return nil
-}
-
-func newConfig() error {
-	// stet up a default configuration object
-	defaultConf := &config.Config{
-		Key: struct {
-			Bits               int    "yaml:\"bits\""
-			Lifetime           int    "yaml:\"lifetime\""
-			CommonName         string "yaml:\"commonname\""
-			Country            string "yaml:\"country\""
-			Province           string "yaml:\"province\""
-			Locality           string "yaml:\"locality\""
-			Organization       string "yaml:\"organization\""
-			OrganizationalUnit string "yaml:\"unit\""
-		}{
-			Bits:               4096,
-			Lifetime:           3650,
-			CommonName:         "Root CA",
-			Country:            "US",
-			Province:           "Washington",
-			Locality:           "Redmond",
-			Organization:       "Contoso",
-			OrganizationalUnit: "Contoso",
-		},
-		File: struct {
-			BaseDir string "yaml:\"basedir\""
-		}{
-			BaseDir: "./.ca",
-		},
-	}
-	// marshall the object into yaml bytes
-	yamlBytes, err := yaml.Marshal(defaultConf)
-	if err != nil {
-		return err
-	}
-	// write the config bytes to disk
-	err = ioutil.WriteFile(configPath, yamlBytes, 0644)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("created new config file at %s\n", configPath)
-	return nil
-}
-
-func readConfig() (*config.Config, error) {
-	// load bytes from disk
-	yamlFile, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		return nil, err
-	}
-	// unmarshall bytes into struct
-	var conf config.Config
-	err = yaml.Unmarshal(yamlFile, &conf)
-	if err != nil {
-		return nil, err
-	}
-	// return config struct
-	return &conf, nil
-}
-
-func InitCA() error {
-	// load config from disk
-	conf, err := readConfig()
-	if err != nil {
-		return err
-	}
+func InitCA(bits, lifetime int, commonname, country, province, locality, organization, organizationalUnit, baseDir string) error {
 	// create paths for generated files
-	err = paths.CreateDirectories(*conf)
+	err := paths.CreateDirectories(baseDir)
 	if err != nil {
 		return err
 	}
 
 	// if root rsa key does not exist
-	if _, err = os.Stat(paths.GetRootRsaKeyPath(*conf)); os.IsNotExist(err) {
+	if _, err = os.Stat(paths.GetRootRsaKeyPath(baseDir)); os.IsNotExist(err) {
 		// generate new root rsa key
-		if err = newRootRsaKey(); err != nil {
+		if err = newRootRsaKey(bits, baseDir); err != nil {
 			return err
 		}
 	} else {
@@ -151,90 +147,73 @@ func InitCA() error {
 	}
 
 	// if the root ca certificate does not exist
-	if _, err = os.Stat(paths.GetCACertPath(*conf)); os.IsNotExist(err) {
+	if _, err = os.Stat(paths.GetCACertPath(baseDir)); os.IsNotExist(err) {
 		// generate new root ca certificate
-		return newRootCACert()
+		return newRootCACert(lifetime, commonname, country, province, locality, organization, organizationalUnit, baseDir)
 	} else {
 		fmt.Println("not overwriting root ca certificate")
 	}
 	return nil
 }
 
-func newRootRsaKey() error {
+func newRootRsaKey(bits int, baseDir string) error {
 	fmt.Println("generating new root rsa key")
-	// load configuration from disk
-	conf, err := readConfig()
-	if err != nil {
-		return err
-	}
 	// generate the root rsa key
-	key, err := keys.GenerateRootRsaKey(*conf)
+	key, err := keys.GenerateRootRsaKey(bits)
 	if err != nil {
 		return err
 	}
 	// save root rsa key to disk
-	return keys.SaveRootRsaKey(*key, *conf)
+	return keys.SaveRootRsaKey(*key, baseDir)
 }
 
-func newRootCACert() error {
+func newRootCACert(lifetime int, commonname, country, province, locality, organization, organizationalUnit, baseDir string) error {
 	fmt.Println("generating new ca certificate")
-	// load the config from disk
-	conf, err := readConfig()
-	if err != nil {
-		return err
-	}
 	// load the root rsa key from disk
-	key, err := keys.GetRootRsaKey(*conf)
+	key, err := keys.GetRootRsaKey(baseDir)
 	if err != nil {
 		return err
 	}
 	// generate a root certificate using the key and configuration
-	caCertBytes, err := certs.GenerateRootCACert(*key, *conf)
+	caCertBytes, err := certs.GenerateRootCACert(*key, lifetime, commonname, country, province, locality, organization, organizationalUnit)
 	if err != nil {
 		return err
 	}
 	// write certificate to disk
-	return certs.SaveRootCACert(caCertBytes, *conf)
+	return certs.SaveRootCACert(caCertBytes, baseDir)
 }
 
-func NewCert() error {
-	name := "localhost"
-	// load the config from disk
-	conf, err := readConfig()
-	if err != nil {
-		return err
-	}
-
+func NewCert(bits, lifetime int, name, country, province, locality, organization, organizationalUnit, baseDir string) error {
 	// generate and write a new rsa key
-	key, err := keys.GenerateRsaKey(2048)
+	key, err := keys.GenerateRsaKey(bits)
 	if err != nil {
 		return err
 	}
-	err = keys.SaveRsaKey(*key, name, *conf)
+	err = keys.SaveRsaKey(*key, name, baseDir)
 	if err != nil {
 		return err
 	}
 
 	// generate and write a new csr
-	csr, err := certs.GenerateCsr(name, *key, *conf)
+	csr, err := certs.GenerateCsr(name, *key, country, province, locality, organization, organizationalUnit)
 	if err != nil {
 		return err
 	}
-	err = certs.SaveCsr(name, csr, *conf)
+	err = certs.SaveCsr(name, csr, baseDir)
 	if err != nil {
 		return err
 	}
 
 	// sign and save the certificate
-	rootKey, err := keys.GetRootRsaKey(*conf)
+	rootKey, err := keys.GetRootRsaKey(baseDir)
 	if err != nil {
 		return err
 	}
-	cert, err := certs.GenerateCert(csr, *rootKey, *conf)
+	cert, err := certs.GenerateCert(csr, *rootKey, baseDir)
 	if err != nil {
 		return err
 	}
-	err = certs.SaveCert(cert, name, *conf)
+	err = certs.SaveCert(cert, name, baseDir)
 	if err != nil {
 		return err
 	}

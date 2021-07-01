@@ -7,33 +7,32 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 
-	"github.com/galenguyer/hancock/config"
 	"github.com/galenguyer/hancock/paths"
 )
 
 // TODO: password encryption of root rsa key
-func GenerateRootRsaKey(conf config.Config) (*rsa.PrivateKey, error) {
-	return rsa.GenerateKey(rand.Reader, conf.Key.Bits)
+func GenerateRootRsaKey(bits int) (*rsa.PrivateKey, error) {
+	return rsa.GenerateKey(rand.Reader, bits)
 }
 
 func GenerateRsaKey(bits int) (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(rand.Reader, bits)
 }
 
-func SaveRootRsaKey(key rsa.PrivateKey, conf config.Config) error {
+func SaveRootRsaKey(key rsa.PrivateKey, baseDir string) error {
 	keyPem := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(&key)}
 	bytes := pem.EncodeToMemory(keyPem)
-	err := ioutil.WriteFile(paths.GetRootRsaKeyPath(conf), bytes, 0600)
+	err := ioutil.WriteFile(paths.GetRootRsaKeyPath(baseDir), bytes, 0600)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func SaveRsaKey(key rsa.PrivateKey, name string, conf config.Config) error {
+func SaveRsaKey(key rsa.PrivateKey, name string, baseDir string) error {
 	keyPem := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(&key)}
 	bytes := pem.EncodeToMemory(keyPem)
-	path, err := paths.GetRsaKeyPath(name, conf)
+	path, err := paths.GetRsaKeyPath(name, baseDir)
 	if err != nil {
 		return err
 	}
@@ -44,8 +43,8 @@ func SaveRsaKey(key rsa.PrivateKey, name string, conf config.Config) error {
 	return nil
 }
 
-func GetRootRsaKey(conf config.Config) (*rsa.PrivateKey, error) {
-	bytes, err := ioutil.ReadFile(paths.GetRootRsaKeyPath(conf))
+func GetRootRsaKey(baseDir string) (*rsa.PrivateKey, error) {
+	bytes, err := ioutil.ReadFile(paths.GetRootRsaKeyPath(baseDir))
 	if err != nil {
 		return nil, err
 	}

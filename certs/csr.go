@@ -8,11 +8,10 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 
-	"github.com/galenguyer/hancock/config"
 	"github.com/galenguyer/hancock/paths"
 )
 
-func GenerateCsr(name string, key rsa.PrivateKey, conf config.Config) ([]byte, error) {
+func GenerateCsr(name string, key rsa.PrivateKey, country, locality, province, organization, organizationalUnit string) ([]byte, error) {
 	_, err := getSerial()
 	if err != nil {
 		return nil, err
@@ -20,11 +19,11 @@ func GenerateCsr(name string, key rsa.PrivateKey, conf config.Config) ([]byte, e
 
 	subject := pkix.Name{
 		CommonName:         name,
-		Country:            []string{conf.Key.Country},
-		Locality:           []string{conf.Key.Locality},
-		Province:           []string{conf.Key.Province},
-		Organization:       []string{conf.Key.Organization},
-		OrganizationalUnit: []string{conf.Key.OrganizationalUnit},
+		Country:            []string{country},
+		Locality:           []string{locality},
+		Province:           []string{province},
+		Organization:       []string{organization},
+		OrganizationalUnit: []string{organizationalUnit},
 	}
 	template := x509.CertificateRequest{
 		Subject:            subject,
@@ -33,13 +32,13 @@ func GenerateCsr(name string, key rsa.PrivateKey, conf config.Config) ([]byte, e
 	return x509.CreateCertificateRequest(rand.Reader, &template, &key)
 }
 
-func SaveCsr(name string, csrBytes []byte, conf config.Config) error {
+func SaveCsr(name string, csrBytes []byte, baseDir string) error {
 	block := &pem.Block{
 		Type:  "CERTIFICATE REQUEST",
 		Bytes: csrBytes,
 	}
 	pemBytes := pem.EncodeToMemory(block)
-	path, err := paths.GetCsrPath(name, conf)
+	path, err := paths.GetCsrPath(name, baseDir)
 	if err != nil {
 		return err
 	}

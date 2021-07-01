@@ -8,12 +8,11 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/galenguyer/hancock/config"
 	"github.com/galenguyer/hancock/paths"
 )
 
-func GenerateCert(csrBytes []byte, rootKey rsa.PrivateKey, conf config.Config) ([]byte, error) {
-	rootCACert, err := GetRootCACert(conf)
+func GenerateCert(csrBytes []byte, rootKey rsa.PrivateKey, baseDir string) ([]byte, error) {
+	rootCACert, err := GetRootCACert(baseDir)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +46,9 @@ func GenerateCert(csrBytes []byte, rootKey rsa.PrivateKey, conf config.Config) (
 	return x509.CreateCertificate(rand.Reader, template, rootCACert, csr.PublicKey, &rootKey)
 }
 
-func SaveCert(certBytes []byte, name string, conf config.Config) error {
+func SaveCert(certBytes []byte, name string, baseDir string) error {
 	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
-	path, err := paths.GetCertPath(name, conf)
+	path, err := paths.GetCertPath(name, baseDir)
 	if err != nil {
 		return err
 	}
