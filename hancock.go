@@ -63,6 +63,10 @@ func main() {
 						Aliases: []string{"ou"},
 						Value:   "Contoso",
 					},
+					&cli.StringFlag{
+						Name:  "basedir",
+						Value: "~/.ca",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					return InitCA(
@@ -98,6 +102,10 @@ func main() {
 						Aliases: []string{"n"},
 						Value:   "localhost",
 					},
+					&cli.StringFlag{
+						Name:  "basedir",
+						Value: "~/.ca",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					return NewCert(
@@ -107,12 +115,6 @@ func main() {
 						c.String("basedir"),
 					)
 				},
-			},
-		},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "basedir",
-				Value: "./.ca",
 			},
 		},
 	}
