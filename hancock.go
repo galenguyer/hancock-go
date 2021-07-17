@@ -1,14 +1,17 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"syscall"
 
 	"github.com/galenguyer/hancock/certs"
 	"github.com/galenguyer/hancock/keys"
 	"github.com/galenguyer/hancock/paths"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/term"
 )
 
 const (
@@ -64,6 +67,15 @@ func main() {
 						Value:   "Contoso",
 					},
 					&cli.StringFlag{
+						Name:    "password",
+						Aliases: []string{"p"},
+						Value:   "",
+					},
+					&cli.BoolFlag{
+						Name:  "no-password",
+						Value: false,
+					},
+					&cli.StringFlag{
 						Name:  "basedir",
 						Value: "~/.ca",
 					},
@@ -78,6 +90,8 @@ func main() {
 						c.String("locality"),
 						c.String("organization"),
 						c.String("organizationalunit"),
+						c.String("password"),
+						c.Bool("no-password"),
 						c.String("basedir"),
 					)
 				},
@@ -104,6 +118,11 @@ func main() {
 						Value:   "localhost",
 					},
 					&cli.StringFlag{
+						Name:    "password",
+						Aliases: []string{"p"},
+						Value:   "",
+					},
+					&cli.StringFlag{
 						Name:  "basedir",
 						Value: "~/.ca",
 					},
@@ -113,6 +132,7 @@ func main() {
 						c.Int("bits"),
 						c.Int("lifetime"),
 						c.String("name"),
+						c.String("password"),
 						c.String("basedir"),
 					)
 				},
@@ -126,7 +146,7 @@ func main() {
 	}
 }
 
-func InitCA(bits, lifetime int, commonname, country, state, locality, organization, organizationalUnit, baseDir string) error {
+func InitCA(bits, lifetime int, commonname, country, state, locality, organization, organizationalUnit, password string, noPassword bool, baseDir string) error {
 	// create paths for generated files
 	err := paths.CreateDirectories(baseDir)
 	if err != nil {
@@ -136,7 +156,7 @@ func InitCA(bits, lifetime int, commonname, country, state, locality, organizati
 	// if root rsa key does not exist
 	if _, err = os.Stat(paths.GetRootRsaKeyPath(baseDir)); os.IsNotExist(err) {
 		// generate new root rsa key
-		if err = newRootRsaKey(bits, baseDir); err != nil {
+		if err = newRootRsaKey(bits, password, noPassword, baseDir); err != nil {
 			return err
 		}
 	} else {
@@ -153,15 +173,38 @@ func InitCA(bits, lifetime int, commonname, country, state, locality, organizati
 	return nil
 }
 
-func newRootRsaKey(bits int, baseDir string) error {
+func newRootRsaKey(bits int, password string, noPassword bool, baseDir string) error {
 	fmt.Println("generating new root rsa key")
 	// generate the root rsa key
 	key, err := keys.GenerateRootRsaKey(bits)
 	if err != nil {
 		return err
 	}
+
+	var bytePassword, byteConfirmPassword []byte
+	if !noPassword && password == "" {
+		fmt.Print("enter password: ")
+		bytePassword, err = term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return err
+		}
+		fmt.Print("\n")
+		fmt.Print("confirm password: ")
+		byteConfirmPassword, err = term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return err
+		}
+		fmt.Print("\n")
+
+		if string(bytePassword) != string(byteConfirmPassword) {
+			return errors.New("passwords do not match")
+		}
+	} else if password != "" {
+		bytePassword = []byte(password)
+	}
+
 	// save root rsa key to disk
-	return keys.SaveRootRsaKey(*key, baseDir)
+	return keys.SaveRootRsaKey(*key, string(bytePassword), baseDir)
 }
 
 func newRootCACert(lifetime int, commonname, country, province, locality, organization, organizationalUnit, baseDir string) error {
@@ -180,7 +223,7 @@ func newRootCACert(lifetime int, commonname, country, province, locality, organi
 	return certs.SaveRootCACert(caCertBytes, baseDir)
 }
 
-func NewCert(bits, lifetime int, name, baseDir string) error {
+func NewCert(bits, lifetime int, name, password, baseDir string) error {
 	// generate and write a new rsa key
 	key, err := keys.GenerateRsaKey(bits)
 	if err != nil {

@@ -19,8 +19,17 @@ func GenerateRsaKey(bits int) (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(rand.Reader, bits)
 }
 
-func SaveRootRsaKey(key rsa.PrivateKey, baseDir string) error {
+func SaveRootRsaKey(key rsa.PrivateKey, password string, baseDir string) error {
 	keyPem := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(&key)}
+
+	if password != "" {
+		var err error
+		keyPem, err = x509.EncryptPEMBlock(rand.Reader, keyPem.Type, keyPem.Bytes, []byte(password), x509.PEMCipherAES256)
+		if err != nil {
+			return err
+		}
+	}
+
 	bytes := pem.EncodeToMemory(keyPem)
 	err := ioutil.WriteFile(paths.GetRootRsaKeyPath(baseDir), bytes, 0600)
 	if err != nil {
