@@ -13,7 +13,7 @@ import (
 	"github.com/galenguyer/hancock/paths"
 )
 
-func GenerateRootCACert(rootKey rsa.PrivateKey, lifetime int, commonName, country, locality, province, organization, organizationalUnit string) ([]byte, error) {
+func GenerateRootCACert(rootKey rsa.PrivateKey, lifetime int, commonName, country, state, locality, organization, organizationalUnit string) ([]byte, error) {
 	serial, err := getSerial()
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func GenerateRootCACert(rootKey rsa.PrivateKey, lifetime int, commonName, countr
 		CommonName:         commonName,
 		Country:            []string{country},
 		Locality:           []string{locality},
-		Province:           []string{province},
+		Province:           []string{state},
 		Organization:       []string{organization},
 		OrganizationalUnit: []string{organizationalUnit},
 	}

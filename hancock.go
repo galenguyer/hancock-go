@@ -74,7 +74,7 @@ func main() {
 						c.Int("lifetime"),
 						c.String("commonname"),
 						c.String("country"),
-						c.String("province"),
+						c.String("state"),
 						c.String("locality"),
 						c.String("organization"),
 						c.String("organizationalunit"),
@@ -83,6 +83,7 @@ func main() {
 				},
 			},
 			{
+				// TODO: Support for multiple DNS names
 				Name:    "new",
 				Aliases: []string{"create"},
 				Usage:   "sign a new key for a host",
@@ -125,7 +126,7 @@ func main() {
 	}
 }
 
-func InitCA(bits, lifetime int, commonname, country, province, locality, organization, organizationalUnit, baseDir string) error {
+func InitCA(bits, lifetime int, commonname, country, state, locality, organization, organizationalUnit, baseDir string) error {
 	// create paths for generated files
 	err := paths.CreateDirectories(baseDir)
 	if err != nil {
@@ -145,7 +146,7 @@ func InitCA(bits, lifetime int, commonname, country, province, locality, organiz
 	// if the root ca certificate does not exist
 	if _, err = os.Stat(paths.GetCACertPath(baseDir)); os.IsNotExist(err) {
 		// generate new root ca certificate
-		return newRootCACert(lifetime, commonname, country, province, locality, organization, organizationalUnit, baseDir)
+		return newRootCACert(lifetime, commonname, country, state, locality, organization, organizationalUnit, baseDir)
 	} else {
 		fmt.Println("not overwriting root ca certificate")
 	}
