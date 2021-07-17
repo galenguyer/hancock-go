@@ -245,6 +245,20 @@ func NewCert(bits, lifetime int, name, password, baseDir string) error {
 	}
 
 	// sign and save the certificate
+	isEncrypted, err := keys.GetRootRsaKeyIsEncrypted(baseDir)
+	if err != nil {
+		return err
+	}
+	if isEncrypted && password == "" {
+		var bytePassword []byte
+		fmt.Print("enter password: ")
+		bytePassword, err = term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return err
+		}
+		fmt.Print("\n")
+		password = string(bytePassword)
+	}
 	rootKey, err := keys.GetRootRsaKey(password, baseDir)
 	if err != nil {
 		return err
