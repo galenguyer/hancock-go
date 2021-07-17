@@ -19,7 +19,8 @@ const (
 
 func main() {
 	app := &cli.App{
-		Name: "hancock",
+		Name:  "hancock",
+		Usage: "a simple certificate manager",
 		Commands: []*cli.Command{
 			{
 				Name:  "init",
