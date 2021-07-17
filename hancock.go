@@ -39,7 +39,7 @@ func main() {
 					&cli.StringFlag{
 						Name:    "commonname",
 						Aliases: []string{"cn"},
-						Value:   "Root CA",
+						Value:   "Contoso Root CA",
 					},
 					&cli.StringFlag{
 						Name:    "country",
@@ -166,7 +166,7 @@ func InitCA(bits, lifetime int, commonname, country, state, locality, organizati
 	// if the root ca certificate does not exist
 	if _, err = os.Stat(paths.GetCACertPath(baseDir)); os.IsNotExist(err) {
 		// generate new root ca certificate
-		return newRootCACert(lifetime, commonname, country, state, locality, organization, organizationalUnit, baseDir)
+		return newRootCACert(lifetime, commonname, country, state, locality, organization, organizationalUnit, password, baseDir)
 	} else {
 		fmt.Println("not overwriting root ca certificate")
 	}
@@ -207,10 +207,10 @@ func newRootRsaKey(bits int, password string, noPassword bool, baseDir string) e
 	return keys.SaveRootRsaKey(*key, string(bytePassword), baseDir)
 }
 
-func newRootCACert(lifetime int, commonname, country, province, locality, organization, organizationalUnit, baseDir string) error {
+func newRootCACert(lifetime int, commonname, country, province, locality, organization, organizationalUnit, password, baseDir string) error {
 	fmt.Println("generating new ca certificate")
 	// load the root rsa key from disk
-	key, err := keys.GetRootRsaKey(baseDir)
+	key, err := keys.GetRootRsaKey(password, baseDir)
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func NewCert(bits, lifetime int, name, password, baseDir string) error {
 	}
 
 	// sign and save the certificate
-	rootKey, err := keys.GetRootRsaKey(baseDir)
+	rootKey, err := keys.GetRootRsaKey(password, baseDir)
 	if err != nil {
 		return err
 	}

@@ -52,15 +52,27 @@ func SaveRsaKey(key rsa.PrivateKey, name string, baseDir string) error {
 	return nil
 }
 
-func GetRootRsaKey(baseDir string) (*rsa.PrivateKey, error) {
+func GetRootRsaKey(password, baseDir string) (*rsa.PrivateKey, error) {
 	bytes, err := ioutil.ReadFile(paths.GetRootRsaKeyPath(baseDir))
 	if err != nil {
 		return nil, err
 	}
 	block, _ := pem.Decode(bytes)
-	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
+	if x509.IsEncryptedPEMBlock(block) {
+		der, err := x509.DecryptPEMBlock(block, []byte(password))
+		if err != nil {
+			return nil, err
+		}
+		key, err := x509.ParsePKCS1PrivateKey(der)
+		if err != nil {
+			return nil, err
+		}
+		return key, nil
+	} else {
+		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		return key, nil
 	}
-	return key, nil
 }
