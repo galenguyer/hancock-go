@@ -13,10 +13,6 @@ import (
 	"golang.org/x/term"
 )
 
-const (
-	configPath = "./config.yaml"
-)
-
 func main() {
 	app := &cli.App{
 		Name:  "hancock",
