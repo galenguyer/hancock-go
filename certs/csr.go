@@ -12,18 +12,18 @@ import (
 )
 
 func GenerateCsr(name, baseDir string, key rsa.PrivateKey) ([]byte, error) {
-	rootCACert, err := GetRootCACert(baseDir)
-	if err != nil {
-		return nil, err
-	}
+	//rootCACert, err := GetRootCACert(baseDir)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	subject := pkix.Name{
-		CommonName:         name,
-		Country:            rootCACert.Issuer.Country,
-		Locality:           rootCACert.Issuer.Locality,
-		Province:           rootCACert.Issuer.Province,
-		Organization:       rootCACert.Issuer.Organization,
-		OrganizationalUnit: rootCACert.Issuer.OrganizationalUnit,
+		CommonName: name,
+		// Country:            rootCACert.Issuer.Country,
+		// Locality:           rootCACert.Issuer.Locality,
+		// Province:           rootCACert.Issuer.Province,
+		// Organization:       rootCACert.Issuer.Organization,
+		// OrganizationalUnit: rootCACert.Issuer.OrganizationalUnit,
 	}
 	template := x509.CertificateRequest{
 		Subject:            subject,
