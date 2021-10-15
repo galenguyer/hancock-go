@@ -114,6 +114,10 @@ func main() {
 						Value:   "localhost",
 					},
 					&cli.StringFlag{
+						Name:  "san",
+						Value: "",
+					},
+					&cli.StringFlag{
 						Name:    "password",
 						Aliases: []string{"p"},
 						Value:   "",
@@ -128,6 +132,7 @@ func main() {
 						c.Int("bits"),
 						c.Int("lifetime"),
 						c.String("name"),
+						c.String("san"),
 						c.String("password"),
 						c.String("basedir"),
 					)
@@ -220,7 +225,7 @@ func newRootCACert(lifetime int, commonname, country, province, locality, organi
 	return certs.SaveRootCACert(caCertBytes, baseDir)
 }
 
-func NewCert(bits, lifetime int, name, password, baseDir string) error {
+func NewCert(bits, lifetime int, name, san, password, baseDir string) error {
 	// generate and write a new rsa key
 	key, err := keys.GenerateRsaKey(bits)
 	if err != nil {
@@ -232,7 +237,7 @@ func NewCert(bits, lifetime int, name, password, baseDir string) error {
 	}
 
 	// generate and write a new csr
-	csr, err := certs.GenerateCsr(name, baseDir, *key)
+	csr, err := certs.GenerateCsr(name, san, baseDir, *key)
 	if err != nil {
 		return err
 	}
