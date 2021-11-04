@@ -55,12 +55,12 @@ func main() {
 					&cli.StringFlag{
 						Name:    "organization",
 						Aliases: []string{"o"},
-						Value:   "Contoso",
+						Value:   "",
 					},
 					&cli.StringFlag{
 						Name:    "organizationalunit",
 						Aliases: []string{"ou"},
-						Value:   "Contoso",
+						Value:   "",
 					},
 					&cli.StringFlag{
 						Name:    "password",
@@ -95,7 +95,7 @@ func main() {
 			{
 				// TODO: Support for multiple DNS names
 				Name:    "new",
-				Aliases: []string{"create"},
+				Aliases: []string{"create", "issue"},
 				Usage:   "sign a new key for a host",
 				Flags: []cli.Flag{
 					&cli.IntFlag{
