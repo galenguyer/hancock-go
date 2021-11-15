@@ -40,7 +40,8 @@ func GenerateRootCACert(rootKey rsa.PrivateKey, lifetime int, commonName, countr
 		BasicConstraintsValid: true,
 		IsCA:                  true,
 	}
-	return x509.CreateCertificate(rand.Reader, template, template, &rootKey.PublicKey, &rootKey)
+	rootTemplate := &x509.Certificate{}
+	return x509.CreateCertificate(rand.Reader, template, rootTemplate, &rootKey.PublicKey, &rootKey)
 }
 
 func SaveRootCACert(certBytes []byte, baseDir string) error {
