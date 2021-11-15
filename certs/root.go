@@ -20,14 +20,27 @@ func GenerateRootCACert(rootKey rsa.PrivateKey, lifetime int, commonName, countr
 	}
 	notBefore := time.Now()
 	notAfter := notBefore.Add(time.Duration(lifetime) * 24 * time.Hour).Add(-1 * time.Second)
+
 	subject := pkix.Name{
-		CommonName:         commonName,
-		Country:            []string{country},
-		Locality:           []string{locality},
-		Province:           []string{state},
-		Organization:       []string{organization},
-		OrganizationalUnit: []string{organizationalUnit},
+		CommonName: commonName,
 	}
+	if country != "" {
+		subject.Country = []string{country}
+	}
+	if locality != "" {
+		subject.Locality = []string{locality}
+	}
+	if state != "" {
+		subject.Province = []string{state}
+	}
+	if organization != "" {
+		subject.Organization = []string{organization}
+	}
+	if organizationalUnit != "" {
+		subject.OrganizationalUnit = []string{organizationalUnit}
+	}
+
+	parentTemplate := &x509.Certificate{}
 	template := &x509.Certificate{
 		Subject:               subject,
 		SerialNumber:          serial,
@@ -40,8 +53,7 @@ func GenerateRootCACert(rootKey rsa.PrivateKey, lifetime int, commonName, countr
 		BasicConstraintsValid: true,
 		IsCA:                  true,
 	}
-	rootTemplate := &x509.Certificate{}
-	return x509.CreateCertificate(rand.Reader, template, rootTemplate, &rootKey.PublicKey, &rootKey)
+	return x509.CreateCertificate(rand.Reader, template, parentTemplate, &rootKey.PublicKey, &rootKey)
 }
 
 func SaveRootCACert(certBytes []byte, baseDir string) error {
