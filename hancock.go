@@ -168,7 +168,7 @@ func InitCA(bits, lifetime int, commonname, country, state, locality, organizati
 	// if the root ca certificate does not exist
 	if _, err = os.Stat(paths.GetCACertPath(baseDir)); os.IsNotExist(err) {
 		// generate new root ca certificate
-		return newRootCACert(lifetime, commonname, country, state, locality, organization, organizationalUnit, password, baseDir)
+		return newRootCACert(lifetime, commonname, country, state, locality, organization, organizationalUnit, password, noPassword, baseDir)
 	} else {
 		fmt.Println("not overwriting root ca certificate")
 	}
@@ -209,10 +209,24 @@ func newRootRsaKey(bits int, password string, noPassword bool, baseDir string) e
 	return keys.SaveRootRsaKey(*key, string(bytePassword), baseDir)
 }
 
-func newRootCACert(lifetime int, commonname, country, province, locality, organization, organizationalUnit, password, baseDir string) error {
+func newRootCACert(lifetime int, commonname, country, province, locality, organization, organizationalUnit, password string, noPassword bool, baseDir string) error {
 	fmt.Println("generating new ca certificate")
+
+	var bytePassword []byte
+	var err error
+	if !noPassword && password == "" {
+		fmt.Print("enter password: ")
+		bytePassword, err = term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return err
+		}
+		fmt.Print("\n")
+	} else if password != "" {
+		bytePassword = []byte(password)
+	}
+
 	// load the root rsa key from disk
-	key, err := keys.GetRootRsaKey(password, baseDir)
+	key, err := keys.GetRootRsaKey(string(bytePassword), baseDir)
 	if err != nil {
 		return err
 	}
