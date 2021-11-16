@@ -40,7 +40,9 @@ func GenerateRootCACert(rootKey rsa.PrivateKey, lifetime int, commonName, countr
 		subject.OrganizationalUnit = []string{organizationalUnit}
 	}
 
-	parentTemplate := &x509.Certificate{}
+	parentTemplate := &x509.Certificate{
+		Subject: subject,
+	}
 	template := &x509.Certificate{
 		Subject:               subject,
 		SerialNumber:          serial,
