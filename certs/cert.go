@@ -46,11 +46,24 @@ func GenerateCert(csrBytes []byte, lifetime int, rootKey rsa.PrivateKey, baseDir
 	return x509.CreateCertificate(rand.Reader, template, rootCACert, csr.PublicKey, &rootKey)
 }
 
-func SaveCert(certBytes []byte, name string, baseDir string) error {
+func SaveCert(certBytes []byte, name, baseDir string) error {
 	pemBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
 	path, err := paths.GetCertPath(name, baseDir)
 	if err != nil {
 		return err
 	}
 	return ioutil.WriteFile(path, pemBytes, 0644)
+}
+
+func GetCert(name, baseDir string) (*x509.Certificate, error) {
+	path, err := paths.GetCertPath(name, baseDir)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode(bytes)
+	return x509.ParseCertificate(block.Bytes)
 }

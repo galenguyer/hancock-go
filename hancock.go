@@ -1,10 +1,13 @@
 package main
 
 import (
+	"crypto/rsa"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"syscall"
+	"time"
 
 	"github.com/galenguyer/hancock/certs"
 	"github.com/galenguyer/hancock/keys"
@@ -93,7 +96,6 @@ func main() {
 				},
 			},
 			{
-				// TODO: Support for multiple DNS names
 				Name:    "new",
 				Aliases: []string{"create", "issue"},
 				Usage:   "sign a new key for a host",
@@ -133,6 +135,32 @@ func main() {
 						c.Int("lifetime"),
 						c.String("name"),
 						c.String("san"),
+						c.String("password"),
+						c.String("basedir"),
+					)
+				},
+			}, {
+				Name:  "renew",
+				Usage: "renew expiring keys",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "name",
+						Aliases: []string{"n"},
+						Value:   "localhost",
+					},
+					&cli.StringFlag{
+						Name:    "password",
+						Aliases: []string{"p"},
+						Value:   "",
+					},
+					&cli.StringFlag{
+						Name:  "basedir",
+						Value: "~/.ca",
+					},
+				},
+				Action: func(c *cli.Context) error {
+					return RenewCerts(
+						c.String("name"),
 						c.String("password"),
 						c.String("basedir"),
 					)
@@ -288,5 +316,44 @@ func NewCert(bits, lifetime int, name, san, password, baseDir string) error {
 		return err
 	}
 
+	return nil
+}
+
+func RenewCerts(name, password, baseDir string) error {
+	// check how close the root ca cert is from expiring
+	rootCACert, err := certs.GetRootCACert(baseDir)
+	if err != nil {
+		return err
+	}
+	daysUntilExpiration := time.Until(rootCACert.NotAfter).Hours() / 24
+	fmt.Printf("root ca certificate expires in %d days\n", int(daysUntilExpiration))
+
+	// get all directories under basedir/certificates
+	children, err := ioutil.ReadDir(paths.GetCertificatesPath(baseDir))
+	if err != nil {
+		return err
+	}
+	for _, child := range children {
+		if child.IsDir() {
+			cert, err := certs.GetCert(child.Name(), baseDir)
+			if err != nil {
+				return err
+			}
+			daysUntilExpiration = (time.Until(cert.NotAfter).Hours()) / 24
+			fmt.Printf("%s expires in %d days\n", cert.Subject.CommonName, int(daysUntilExpiration))
+			if daysUntilExpiration < 30 {
+				dnsNames := ""
+				for _, name := range cert.DNSNames {
+					if name != cert.Subject.CommonName {
+						dnsNames += name + " "
+					}
+				}
+				err = NewCert(cert.PublicKey.(*rsa.PublicKey).Size()*8, int(cert.NotAfter.Sub(cert.NotBefore).Hours()+1)/24, cert.Subject.CommonName, dnsNames, password, baseDir)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 	return nil
 }

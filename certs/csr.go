@@ -37,7 +37,7 @@ func GenerateCsr(name, san, baseDir string, key rsa.PrivateKey) ([]byte, error) 
 	} else {
 		dnsNames = append(dnsNames, name)
 	}
-	for _, s := range strings.Split(san, ",") {
+	for _, s := range strings.Split(san, " ") {
 		if match, _ := regexp.Match(ipRegex, []byte(s)); match {
 			ipAddresses = append(ipAddresses, net.ParseIP(s))
 		} else {

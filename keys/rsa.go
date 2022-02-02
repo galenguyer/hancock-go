@@ -76,6 +76,22 @@ func GetRootRsaKey(password, baseDir string) (*rsa.PrivateKey, error) {
 		return key, nil
 	}
 }
+func GetRsaKey(name, baseDir string) (*rsa.PrivateKey, error) {
+	rsaKeyPath, err := paths.GetRsaKeyPath(name, baseDir)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := ioutil.ReadFile(rsaKeyPath)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode(bytes)
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
+}
 
 func GetRootRsaKeyIsEncrypted(baseDir string) (bool, error) {
 	bytes, err := ioutil.ReadFile(paths.GetRootRsaKeyPath(baseDir))

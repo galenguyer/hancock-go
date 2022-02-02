@@ -40,6 +40,10 @@ func GetCertPath(name string, baseDir string) (string, error) {
 	return strings.TrimSuffix(strings.ReplaceAll(baseDir, "~", homeDir), "/") + "/certificates/" + name + "/" + name + ".crt", nil
 }
 
+func GetCertificatesPath(baseDir string) string {
+	return strings.TrimSuffix(strings.ReplaceAll(baseDir, "~", homeDir), "/") + "/certificates/"
+}
+
 func GetCsrPath(name string, baseDir string) (string, error) {
 	err := os.MkdirAll(strings.TrimSuffix(strings.ReplaceAll(baseDir, "~", homeDir), "/")+"/certificates/"+name, 0755)
 	if err != nil {
